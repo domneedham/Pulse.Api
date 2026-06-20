@@ -1,0 +1,6 @@
+{
+  "appHost": {
+    "path": "src/Pulse.Api.AppHost/Pulse.Api.AppHost.csproj"
+  },
+  "channel": "stable"
+}

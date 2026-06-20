@@ -1,0 +1,36 @@
+### Pulse API smoke test
+### 1. Start the stack:  aspire start
+### 2. Set @api to the apiservice URL and @anonKey to the anon key — both shown on the Aspire dashboard.
+### 3. Run top to bottom (VS Code REST Client / Rider / VS).
+
+@api = http://localhost:5000
+@supabase = http://localhost:8000
+@anonKey = <anon key from Aspire dashboard (supabase resource)>
+
+### Sign in as Dom (pre-registered dev user)
+# @name domLogin
+POST {{supabase}}/auth/v1/token?grant_type=password
+apikey: {{anonKey}}
+Content-Type: application/json
+
+{ "email": "dom@pulse.dev", "password": "Pulse123!" }
+
+@domToken = {{domLogin.response.body.access_token}}
+
+### Register this device for push (also provisions the user row on first authenticated call)
+PUT {{api}}/api/devices
+Authorization: Bearer {{domToken}}
+Content-Type: application/json
+
+{
+  "fcmToken": "test-fcm-token-abc123",
+  "platform": "Ios",
+  "deviceModel": "iPhone 17 Pro",
+  "deviceName": "Dom iPhone",
+  "osVersion": "19.5",
+  "appVersion": "1.0.0"
+}
+
+### Unregister the device (sign-out)
+DELETE {{api}}/api/devices/test-fcm-token-abc123
+Authorization: Bearer {{domToken}}
