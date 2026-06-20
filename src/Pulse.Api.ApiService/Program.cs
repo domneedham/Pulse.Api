@@ -68,6 +68,8 @@ builder.Services.AddHostedService<AvatarBucketInitializer>();
 
 builder.Services.AddScoped<ICurrentUser, HttpContextCurrentUser>();
 builder.Services.AddScoped<IDeviceService, DeviceService>();
+builder.Services.AddScoped<IConnectionService, ConnectionService>();
+builder.Services.AddScoped<IPulseService, PulseService>();
 
 var app = builder.Build();
 

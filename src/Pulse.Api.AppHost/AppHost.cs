@@ -4,7 +4,7 @@ using Nextended.Aspire.Hosting.Supabase.Builders;
 var builder = DistributedApplication.CreateBuilder(args);
 
 // Publish target: `aspire publish`/`aspire deploy` emit docker-compose.yaml + .env for the homeserver.
-builder.AddDockerComposeEnvironment("homeserver")
+builder.AddDockerComposeEnvironment("pulse-homeserver")
     .ConfigureComposeFile(file =>
     {
         foreach (var (name, service) in file.Services)
@@ -13,6 +13,11 @@ builder.AddDockerComposeEnvironment("homeserver")
             if (!name.EndsWith("-init"))
             {
                 service.Restart ??= "unless-stopped";
+            }
+
+            if (!string.IsNullOrEmpty(service.ContainerName) && !service.ContainerName.StartsWith("pulse-"))
+            {
+                service.ContainerName = $"pulse-{service.ContainerName}";
             }
         }
     });
@@ -36,9 +41,7 @@ var supabase = builder.AddSupabase("supabase")
         }
         else
         {
-            // Fixed host port on the homeserver so the mobile client has a stable Supabase URL
-            // (8000/8080 are taken on the homeserver; container side stays 8000).
-            kong.PublishAsDockerComposeService((_, service) => service.Ports = ["7079:8000"]);
+            kong.PublishAsDockerComposeService((_, service) => service.Ports = ["7089:8000"]);
         }
     })
     .WithRegisteredUser("dom@pulse.dev", "Pulse123!", "Dom")
@@ -66,12 +69,12 @@ var apiservice = builder.AddProject<Projects.Pulse_Api_ApiService>("apiservice")
             // boot by default; the homeserver has no separate deployment step, so opt in.
             ctx.EnvironmentVariables["Database__MigrateOnStartup"] = "true";
 
-            // The homeserver is the test/staging box, so the dev-only simulated-purchase endpoint
-            // (POST /api/tokens/dev/simulate-purchase) is enabled there to exercise the token flow
-            // without a paid Apple/Google account. Overridable at deploy time
-            // (Tokens__EnableSimulatedPurchases=false) and MUST be off for a real production deploy.
-            ctx.EnvironmentVariables["Tokens__EnableSimulatedPurchases"] =
-                Environment.GetEnvironmentVariable("Tokens__EnableSimulatedPurchases") ?? "true";
+            // The avatar URLs we hand back to the mobile app must be reachable FROM THE PHONE, not
+            // from inside the compose network. The API uploads via the internal gateway
+            // (ConnectionStrings__supabase__Url = http://supabase-kong:8000), but a phone can't resolve
+            // that — so persist public URLs against the homeserver's LAN address + Kong's published
+            // port (7089). The host is filled in via .env at deploy time (PULSE_HOMESERVER_HOST).
+            ctx.EnvironmentVariables["Supabase__PublicUrl"] = "http://${PULSE_HOMESERVER_HOST}:7089";
         }
         ctx.EnvironmentVariables["ConnectionStrings__pulsedb"] = pulsedb;
         ctx.EnvironmentVariables["Supabase__JwtSecret"] = supabase.Resource.JwtSecret;
@@ -86,10 +89,9 @@ if (builder.ExecutionContext.IsRunMode)
 }
 else
 {
-    // Fixed host port + listen port on the homeserver so the mobile client has a stable API URL.
     apiservice
         .WithEndpoint("http", e => e.TargetPort = 8080, createIfNotExists: false)
-        .PublishAsDockerComposeService((_, service) => service.Ports = ["7080:8080"]);
+        .PublishAsDockerComposeService((_, service) => service.Ports = ["7090:8080"]);
 
     // Persist Postgres + uploaded files under /opt/pulse on the docker host (browsable,
     // rsync-able, survives `compose down -v`; scrapping = rm -rf /opt/pulse on the server).
@@ -104,10 +106,6 @@ else
     }
     storage.WithBindMount("/opt/pulse/storage", "/var/lib/storage");
 
-    // DbGate: a web DB browser for poking at the homeserver Postgres. Part of the Aspire
-    // deployment so it lands in the same compose project/network automatically — no manual
-    // network-name chasing. Reachable at http://<homeserver>:7078; its preconfigured "pulse"
-    // connection points straight at supabase-db. Settings persist under /opt/pulse/dbgate.
     var dbResource = supabase.Resource.Database!.Resource;
     builder.AddContainer("dbgate", "dbgate/dbgate", "latest")
         .WithHttpEndpoint(targetPort: 3000, name: "http")
@@ -121,8 +119,7 @@ else
         .WithEnvironment("DATABASE_pulse", "postgres")
         .WithEnvironment("ENGINE_pulse", "postgres@dbgate-plugin-postgres")
         .WaitFor(supabase.GetDatabase()!)
-        // Fixed host port on the homeserver, matching the old standalone compose file.
-        .PublishAsDockerComposeService((_, service) => service.Ports = ["7078:3000"]);
+        .PublishAsDockerComposeService((_, service) => service.Ports = ["7088:3000"]);
 
     // The Supabase package hardcodes PublishAsAzureContainerApp on its containers, which
     // fails validation when publishing to Docker Compose. Strip those annotations so the

@@ -20,13 +20,40 @@ public interface ISupabaseStorageClient
     Task DeleteAvatarAsync(string path, CancellationToken cancellationToken = default);
 }
 
-public class SupabaseStorageClient(HttpClient httpClient, ILogger<SupabaseStorageClient> logger) : ISupabaseStorageClient
+public class SupabaseStorageClient : ISupabaseStorageClient
 {
     public const string Bucket = "avatars";
 
+    private readonly HttpClient _httpClient;
+    private readonly ILogger<SupabaseStorageClient> _logger;
+
+    /// <summary>
+    /// Base URL (ending in '/') used to build the public avatar URLs handed back to clients. This is
+    /// deliberately separate from <see cref="HttpClient.BaseAddress"/>: the API talks to Supabase over
+    /// the internal Docker network (e.g. http://supabase-kong:8000), but a name like that is
+    /// unresolvable from a phone, so the URL we persist must be a LAN/public-reachable address.
+    /// </summary>
+    private readonly string _publicBaseUrl;
+
+    public SupabaseStorageClient(
+        HttpClient httpClient, IConfiguration configuration, ILogger<SupabaseStorageClient> logger)
+    {
+        _httpClient = httpClient;
+        _logger = logger;
+
+        // Prefer an explicit public URL; otherwise fall back to the internal base address so local
+        // `aspire start` (where the gateway is reachable at localhost) keeps working unchanged.
+        var publicUrl = configuration["Supabase:PublicUrl"]
+            ?? configuration["ConnectionStrings:supabase:Url"]
+            ?? httpClient.BaseAddress?.ToString()
+            ?? throw new InvalidOperationException("No Supabase URL configured for building public avatar URLs.");
+
+        _publicBaseUrl = publicUrl.TrimEnd('/') + "/";
+    }
+
     public async Task EnsureAvatarsBucketAsync(CancellationToken cancellationToken = default)
     {
-        using var response = await httpClient.PostAsJsonAsync(
+        using var response = await _httpClient.PostAsJsonAsync(
             "storage/v1/bucket",
             new { id = Bucket, name = Bucket, @public = true },
             cancellationToken);
@@ -38,7 +65,7 @@ public class SupabaseStorageClient(HttpClient httpClient, ILogger<SupabaseStorag
         }
 
         var body = await response.Content.ReadAsStringAsync(cancellationToken);
-        logger.LogWarning("Could not ensure avatars bucket ({Status}): {Body}", response.StatusCode, body);
+        _logger.LogWarning("Could not ensure avatars bucket ({Status}): {Body}", response.StatusCode, body);
         response.EnsureSuccessStatusCode();
     }
 
@@ -50,16 +77,17 @@ public class SupabaseStorageClient(HttpClient httpClient, ILogger<SupabaseStorag
         request.Content = new ByteArrayContent(content);
         request.Content.Headers.ContentType = new MediaTypeHeaderValue(contentType);
 
-        using var response = await httpClient.SendAsync(request, cancellationToken);
+        using var response = await _httpClient.SendAsync(request, cancellationToken);
         response.EnsureSuccessStatusCode();
 
-        // Public bucket → stable public URL. Base address ends with '/'.
-        return $"{httpClient.BaseAddress}storage/v1/object/public/{Bucket}/{path}";
+        // Public bucket → stable public URL, built from the client-reachable base (NOT the internal
+        // Docker address used for the upload above). _publicBaseUrl ends with '/'.
+        return $"{_publicBaseUrl}storage/v1/object/public/{Bucket}/{path}";
     }
 
     public async Task DeleteAvatarAsync(string path, CancellationToken cancellationToken = default)
     {
-        using var response = await httpClient.DeleteAsync($"storage/v1/object/{Bucket}/{path}", cancellationToken);
+        using var response = await _httpClient.DeleteAsync($"storage/v1/object/{Bucket}/{path}", cancellationToken);
         if (response.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.OK)
         {
             return;
