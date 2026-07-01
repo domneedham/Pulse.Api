@@ -26,6 +26,13 @@ public class User
     /// </summary>
     public string Timezone { get; set; } = "Etc/UTC";
 
+    /// <summary>
+    /// Whether this user has Pro. Pro unlocks the premium Moment packs; in a connection, EITHER partner
+    /// being Pro unlocks Pro packs for the couple. No payment provider yet — flipped via the dev-only
+    /// upgrade endpoint for now.
+    /// </summary>
+    public bool IsPro { get; set; }
+
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset? DeletedAt { get; set; }
 

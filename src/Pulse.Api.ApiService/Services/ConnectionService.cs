@@ -87,6 +87,16 @@ public class ConnectionService(PulseDbContext db) : IConnectionService
         connection.InviteCode = null;
         connection.ConnectedAt = DateTimeOffset.UtcNow;
 
+        // Anchor the couple's "today" to the inviter's timezone (both partners then agree on the day).
+        var inviterTz = await db.Users
+            .Where(u => u.Id == connection.UserAId)
+            .Select(u => u.Timezone)
+            .FirstOrDefaultAsync(ct);
+        if (!string.IsNullOrWhiteSpace(inviterTz))
+        {
+            connection.Timezone = inviterTz;
+        }
+
         await db.SaveChangesAsync(ct);
 
         return await ToDtoAsync(connection, userId, ct);

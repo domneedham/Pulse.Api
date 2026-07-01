@@ -13,6 +13,13 @@ public class PulseDbContext(DbContextOptions<PulseDbContext> options) : DbContex
     public DbSet<PulseMood> PulseMoods => Set<PulseMood>();
     public DbSet<PulseNeed> PulseNeeds => Set<PulseNeed>();
     public DbSet<PulseThought> PulseThoughts => Set<PulseThought>();
+    public DbSet<PulseTouch> PulseTouches => Set<PulseTouch>();
+    public DbSet<UserFavorite> UserFavorites => Set<UserFavorite>();
+    public DbSet<Pack> Packs => Set<Pack>();
+    public DbSet<ConnectionPack> ConnectionPacks => Set<ConnectionPack>();
+    public DbSet<MomentTemplate> MomentTemplates => Set<MomentTemplate>();
+    public DbSet<Moment> Moments => Set<Moment>();
+    public DbSet<MomentResponse> MomentResponses => Set<MomentResponse>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

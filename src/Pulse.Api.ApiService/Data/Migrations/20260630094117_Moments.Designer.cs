@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Pulse.Api.ApiService.Data;
@@ -11,9 +12,11 @@ using Pulse.Api.ApiService.Data;
 namespace Pulse.Api.ApiService.Data.Migrations
 {
     [DbContext(typeof(PulseDbContext))]
-    partial class PulseDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260630094117_Moments")]
+    partial class Moments
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -48,12 +51,6 @@ namespace Pulse.Api.ApiService.Data.Migrations
                         .HasColumnType("character varying(16)")
                         .HasColumnName("status");
 
-                    b.Property<string>("Timezone")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("character varying(64)")
-                        .HasColumnName("timezone");
-
                     b.Property<Guid>("UserAId")
                         .HasColumnType("uuid")
                         .HasColumnName("user_a_id");
@@ -79,29 +76,6 @@ namespace Pulse.Api.ApiService.Data.Migrations
                     b.ToTable("connections", (string)null);
                 });
 
-            modelBuilder.Entity("Pulse.Api.ApiService.Domain.ConnectionPack", b =>
-                {
-                    b.Property<Guid>("ConnectionId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("connection_id");
-
-                    b.Property<Guid>("PackId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("pack_id");
-
-                    b.Property<DateTimeOffset>("AddedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("added_at");
-
-                    b.HasKey("ConnectionId", "PackId")
-                        .HasName("pk_connection_packs");
-
-                    b.HasIndex("PackId")
-                        .HasDatabaseName("ix_connection_packs_pack_id");
-
-                    b.ToTable("connection_packs", (string)null);
-                });
-
             modelBuilder.Entity("Pulse.Api.ApiService.Domain.Moment", b =>
                 {
                     b.Property<Guid>("Id")
@@ -121,14 +95,6 @@ namespace Pulse.Api.ApiService.Data.Migrations
                         .HasColumnType("date")
                         .HasColumnName("date");
 
-                    b.Property<bool>("IsFavorite")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_favorite");
-
-                    b.Property<int>("SequenceNumber")
-                        .HasColumnType("integer")
-                        .HasColumnName("sequence_number");
-
                     b.Property<Guid>("TemplateId")
                         .HasColumnType("uuid")
                         .HasColumnName("template_id");
@@ -143,9 +109,6 @@ namespace Pulse.Api.ApiService.Data.Migrations
                         .IsUnique()
                         .HasDatabaseName("ix_moments_connection_id_date");
 
-                    b.HasIndex("ConnectionId", "SequenceNumber")
-                        .HasDatabaseName("ix_moments_connection_id_sequence_number");
-
                     b.ToTable("moments", (string)null);
                 });
 
@@ -155,10 +118,6 @@ namespace Pulse.Api.ApiService.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("id");
-
-                    b.Property<int?>("ChoiceIndex")
-                        .HasColumnType("integer")
-                        .HasColumnName("choice_index");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -202,16 +161,6 @@ namespace Pulse.Api.ApiService.Data.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("user_id");
 
-                    b.Property<string>("VoicePath")
-                        .HasMaxLength(400)
-                        .HasColumnType("character varying(400)")
-                        .HasColumnName("voice_path");
-
-                    b.Property<string>("VoiceUrl")
-                        .HasMaxLength(800)
-                        .HasColumnType("character varying(800)")
-                        .HasColumnName("voice_url");
-
                     b.HasKey("Id")
                         .HasName("pk_moment_responses");
 
@@ -237,10 +186,6 @@ namespace Pulse.Api.ApiService.Data.Migrations
                         .HasMaxLength(16)
                         .HasColumnType("character varying(16)")
                         .HasColumnName("category");
-
-                    b.Property<string>("Options")
-                        .HasColumnType("jsonb")
-                        .HasColumnName("options");
 
                     b.Property<Guid>("PackId")
                         .HasColumnType("uuid")
@@ -403,30 +348,27 @@ namespace Pulse.Api.ApiService.Data.Migrations
                         {
                             Id = new Guid("4f32102f-7280-d6a9-52ff-a55adf11bd07"),
                             Category = "Fun",
-                            Options = "[\"\\uD83C\\uDF55 Pizza\",\"\\uD83C\\uDF54 Burger\"]",
                             PackId = new Guid("a07a6b6e-62f5-dd5c-5c66-1a8d085aa450"),
-                            Prompt = "Pizza or Burger? Pick your favourite.",
-                            ResponseKind = "Choice",
+                            Prompt = "Pizza 🍕 or Burger 🍔? Reveal together.",
+                            ResponseKind = "Text",
                             Title = "This or That"
                         },
                         new
                         {
                             Id = new Guid("45c3b95d-837b-7cbc-40ca-d2f50e3018c7"),
                             Category = "Fun",
-                            Options = "[\"\\u26F0\\uFE0F Mountains\",\"\\uD83C\\uDFD6\\uFE0F Beach\",\"\\uD83C\\uDFD9\\uFE0F City\"]",
                             PackId = new Guid("a07a6b6e-62f5-dd5c-5c66-1a8d085aa450"),
-                            Prompt = "Pick your favourite!",
-                            ResponseKind = "Choice",
-                            Title = "Would You Rather?"
+                            Prompt = "Who would survive a zombie apocalypse?",
+                            ResponseKind = "Text",
+                            Title = "Who's more likely?"
                         },
                         new
                         {
                             Id = new Guid("bdbe1627-849f-4004-e5f1-5d43e316dfb2"),
                             Category = "Fun",
-                            Options = "[\"\\uD83D\\uDC31 Cats\",\"\\uD83D\\uDC36 Dogs\"]",
                             PackId = new Guid("a07a6b6e-62f5-dd5c-5c66-1a8d085aa450"),
-                            Prompt = "Cats or dogs?",
-                            ResponseKind = "Choice",
+                            Prompt = "Cats or dogs? Reveal.",
+                            ResponseKind = "Text",
                             Title = "Secret vote"
                         },
                         new
@@ -437,33 +379,6 @@ namespace Pulse.Api.ApiService.Data.Migrations
                             Prompt = "Describe your day using only emojis.",
                             ResponseKind = "Text",
                             Title = "Emoji story"
-                        },
-                        new
-                        {
-                            Id = new Guid("e7ed1cbc-821a-2e93-97c0-d9eaffff245a"),
-                            Category = "Voice",
-                            PackId = new Guid("a07a6b6e-62f5-dd5c-5c66-1a8d085aa450"),
-                            Prompt = "Leave a 20-second morning message.",
-                            ResponseKind = "Voice",
-                            Title = "Good morning"
-                        },
-                        new
-                        {
-                            Id = new Guid("f0512d14-d8ba-7e37-0bca-89064a6f9c0a"),
-                            Category = "Voice",
-                            PackId = new Guid("a07a6b6e-62f5-dd5c-5c66-1a8d085aa450"),
-                            Prompt = "Share a story you've never told.",
-                            ResponseKind = "Voice",
-                            Title = "Tell me something"
-                        },
-                        new
-                        {
-                            Id = new Guid("a46b7677-e097-cdd9-87ca-85771a488ba8"),
-                            Category = "Voice",
-                            PackId = new Guid("a07a6b6e-62f5-dd5c-5c66-1a8d085aa450"),
-                            Prompt = "Record your best laugh.",
-                            ResponseKind = "Voice",
-                            Title = "Laugh"
                         },
                         new
                         {
@@ -837,16 +752,6 @@ namespace Pulse.Api.ApiService.Data.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("is_favorite");
 
-                    b.Property<string>("Note")
-                        .HasMaxLength(80)
-                        .HasColumnType("character varying(80)")
-                        .HasColumnName("note");
-
-                    b.Property<string>("Reaction")
-                        .HasMaxLength(16)
-                        .HasColumnType("character varying(16)")
-                        .HasColumnName("reaction");
-
                     b.Property<Guid>("SenderId")
                         .HasColumnType("uuid")
                         .HasColumnName("sender_id");
@@ -979,10 +884,6 @@ namespace Pulse.Api.ApiService.Data.Migrations
                         .HasMaxLength(80)
                         .HasColumnType("character varying(80)")
                         .HasColumnName("display_name");
-
-                    b.Property<bool>("IsPro")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_pro");
 
                     b.Property<string>("Timezone")
                         .IsRequired()
@@ -1129,27 +1030,6 @@ namespace Pulse.Api.ApiService.Data.Migrations
                     b.Navigation("UserA");
 
                     b.Navigation("UserB");
-                });
-
-            modelBuilder.Entity("Pulse.Api.ApiService.Domain.ConnectionPack", b =>
-                {
-                    b.HasOne("Pulse.Api.ApiService.Domain.Connection", "Connection")
-                        .WithMany()
-                        .HasForeignKey("ConnectionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_connection_packs_connections_connection_id");
-
-                    b.HasOne("Pulse.Api.ApiService.Domain.Pack", "Pack")
-                        .WithMany()
-                        .HasForeignKey("PackId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_connection_packs_packs_pack_id");
-
-                    b.Navigation("Connection");
-
-                    b.Navigation("Pack");
                 });
 
             modelBuilder.Entity("Pulse.Api.ApiService.Domain.Moment", b =>

@@ -19,23 +19,63 @@ public class PulsesController(
         [FromQuery] DateTimeOffset? before, [FromQuery] int limit = 50, CancellationToken ct = default) =>
         Ok(await pulseService.GetTimelineAsync(currentUser.Id, before, limit, ct));
 
-    /// <summary>The most recent pulse on the connection (Home "latest pulse"), or 204 if none yet.</summary>
+    /// <summary>The most recent pulse received from the partner (Home card), or 204 if none yet.</summary>
     [HttpGet("latest")]
     public async Task<ActionResult<PulseDto>> GetLatest(CancellationToken ct)
     {
-        var pulse = await pulseService.GetLatestAsync(currentUser.Id, ct);
+        var pulse = await pulseService.GetLatestFromPartnerAsync(currentUser.Id, ct);
         return pulse is null ? NoContent() : Ok(pulse);
     }
 
+    /// <summary>The connection's favourited pulses, newest first.</summary>
+    [HttpGet("favorites")]
+    public async Task<ActionResult<IReadOnlyList<PulseDto>>> GetFavorites(CancellationToken ct) =>
+        Ok(await pulseService.GetFavoritesAsync(currentUser.Id, ct));
+
+    /// <summary>Search the connection's pulses by text / mood / need label.</summary>
+    [HttpGet("search")]
+    public async Task<ActionResult<IReadOnlyList<PulseDto>>> Search(
+        [FromQuery] string q, CancellationToken ct = default) =>
+        Ok(await pulseService.SearchAsync(currentUser.Id, q ?? string.Empty, ct));
+
+    /// <summary>A single pulse, for the detail screen.</summary>
+    [HttpGet("{id:guid}")]
+    public async Task<ActionResult<PulseDto>> GetById(Guid id, CancellationToken ct) =>
+        Ok(await pulseService.GetByIdAsync(currentUser.Id, id, ct));
+
     [HttpPost("mood")]
     public async Task<ActionResult<PulseDto>> SendMood(SendMoodRequest request, CancellationToken ct) =>
-        Ok(await pulseService.SendMoodAsync(currentUser.Id, request.MoodType, ct));
+        Ok(await pulseService.SendMoodAsync(currentUser.Id, request.Text, request.Emoji, request.Note, ct));
 
     [HttpPost("need")]
     public async Task<ActionResult<PulseDto>> SendNeed(SendNeedRequest request, CancellationToken ct) =>
-        Ok(await pulseService.SendNeedAsync(currentUser.Id, request.NeedType, ct));
+        Ok(await pulseService.SendNeedAsync(currentUser.Id, request.Text, request.Emoji, request.Note, ct));
 
     [HttpPost("thought")]
     public async Task<ActionResult<PulseDto>> SendThought(SendThoughtRequest request, CancellationToken ct) =>
-        Ok(await pulseService.SendThoughtAsync(currentUser.Id, request.Message, ct));
+        Ok(await pulseService.SendThoughtAsync(currentUser.Id, request.Text, request.Emoji, request.Note, ct));
+
+    [HttpPost("touch")]
+    public async Task<ActionResult<PulseDto>> SendTouch(SendTouchRequest request, CancellationToken ct) =>
+        Ok(await pulseService.SendTouchAsync(currentUser.Id, request.StrokeData, ct));
+
+    /// <summary>Star or unstar a pulse.</summary>
+    [HttpPut("{id:guid}/favorite")]
+    public async Task<ActionResult<PulseDto>> SetFavorite(
+        Guid id, SetFavoriteRequest request, CancellationToken ct) =>
+        Ok(await pulseService.SetFavoriteAsync(currentUser.Id, id, request.IsFavorite, ct));
+
+    /// <summary>React to a partner's pulse with an emoji (empty body clears it).</summary>
+    [HttpPut("{id:guid}/reaction")]
+    public async Task<ActionResult<PulseDto>> SetReaction(
+        Guid id, SetReactionRequest request, CancellationToken ct) =>
+        Ok(await pulseService.SetReactionAsync(currentUser.Id, id, request.Emoji, ct));
+
+    /// <summary>Delete a pulse you sent (removes it from the shared timeline).</summary>
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
+    {
+        await pulseService.DeleteAsync(currentUser.Id, id, ct);
+        return NoContent();
+    }
 }

@@ -15,32 +15,14 @@ public enum ConnectionStatus
     Cancelled
 }
 
-/// <summary>The kind of pulse. Each value has a matching detail table (mood/need/thought/touch).</summary>
+/// <summary>
+/// The category of a pulse / favourite. A pulse carries free-text + an emoji within one of these
+/// categories rather than a fixed enum value, so users can favourite their own phrases per category.
+/// </summary>
 public enum PulseType
 {
     Mood = 1,
     Need = 2,
     Thought = 3,
     Touch = 4
-}
-
-/// <summary>Fixed mood set (no custom moods in MVP).</summary>
-public enum MoodType
-{
-    Great = 1,
-    Good = 2,
-    Tired = 3,
-    Stressed = 4,
-    Loved = 5
-}
-
-/// <summary>Fixed need set (no custom needs in MVP).</summary>
-public enum NeedType
-{
-    Hug = 1,
-    Coffee = 2,
-    Wine = 3,
-    Listen = 4,
-    QualityTime = 5,
-    Space = 6
 }

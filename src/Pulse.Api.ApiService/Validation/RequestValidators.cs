@@ -7,7 +7,8 @@ public class SendMoodRequestValidator : AbstractValidator<SendMoodRequest>
 {
     public SendMoodRequestValidator()
     {
-        RuleFor(x => x.MoodType).IsInEnum();
+        RuleFor(x => x.Text).PhrasePulse();
+        RuleFor(x => x.Note).MaximumLength(80).WithMessage("A note can be up to 80 characters.");
     }
 }
 
@@ -15,7 +16,8 @@ public class SendNeedRequestValidator : AbstractValidator<SendNeedRequest>
 {
     public SendNeedRequestValidator()
     {
-        RuleFor(x => x.NeedType).IsInEnum();
+        RuleFor(x => x.Text).PhrasePulse();
+        RuleFor(x => x.Note).MaximumLength(80).WithMessage("A note can be up to 80 characters.");
     }
 }
 
@@ -23,10 +25,26 @@ public class SendThoughtRequestValidator : AbstractValidator<SendThoughtRequest>
 {
     public SendThoughtRequestValidator()
     {
-        RuleFor(x => x.Message)
-            .NotEmpty().WithMessage("Add a few words.")
-            .MaximumLength(50).WithMessage("Keep it under 50 characters.");
+        RuleFor(x => x.Text).PhrasePulse();
+        RuleFor(x => x.Note).MaximumLength(80).WithMessage("A note can be up to 80 characters.");
     }
+}
+
+public class AddFavoriteRequestValidator : AbstractValidator<AddFavoriteRequest>
+{
+    public AddFavoriteRequestValidator()
+    {
+        RuleFor(x => x.Category).IsInEnum();
+        RuleFor(x => x.Text).PhrasePulse();
+    }
+}
+
+internal static class PhraseRules
+{
+    /// <summary>A pulse / favourite phrase: non-empty, ≤ 80 chars.</summary>
+    public static IRuleBuilderOptions<T, string> PhrasePulse<T>(this IRuleBuilder<T, string> rule) =>
+        rule.NotEmpty().WithMessage("Add a few words.")
+            .MaximumLength(80).WithMessage("Keep it under 80 characters.");
 }
 
 public class AcceptInviteRequestValidator : AbstractValidator<AcceptInviteRequest>

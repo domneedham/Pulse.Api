@@ -63,13 +63,23 @@ builder.Services.AddHttpClient<ISupabaseAdminClient, SupabaseAdminClient>(
 builder.Services.AddHttpClient<ISupabaseStorageClient, SupabaseStorageClient>(
     client => ConfigureSupabaseAdminHttpClient(builder, client));
 
-// Create the public avatars bucket once on boot (idempotent).
+// Create the public avatars + moment-photos buckets once on boot (idempotent).
 builder.Services.AddHostedService<AvatarBucketInitializer>();
+builder.Services.AddHostedService<MomentPhotoBucketInitializer>();
+builder.Services.AddHostedService<MomentVoiceBucketInitializer>();
 
 builder.Services.AddScoped<ICurrentUser, HttpContextCurrentUser>();
+builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IDeviceService, DeviceService>();
 builder.Services.AddScoped<IConnectionService, ConnectionService>();
 builder.Services.AddScoped<IPulseService, PulseService>();
+builder.Services.AddScoped<IFavoritesService, FavoritesService>();
+builder.Services.AddScoped<MomentAssignment>();
+builder.Services.AddScoped<IMomentService, MomentService>();
+builder.Services.AddScoped<ITrailService, TrailService>();
+
+// Hourly sweep that assigns each active connection its daily Moment (today + tomorrow, per timezone).
+builder.Services.AddHostedService<MomentAssignmentJob>();
 
 var app = builder.Build();
 

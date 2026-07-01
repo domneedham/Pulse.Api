@@ -29,6 +29,13 @@ public class Connection
     /// <summary>When the invite was accepted and the connection went Active.</summary>
     public DateTimeOffset? ConnectedAt { get; set; }
 
+    /// <summary>
+    /// The couple's reference IANA timezone (e.g. "Europe/London"), used to decide which calendar day
+    /// "today's Moment" falls on so both partners agree regardless of where each one is. Defaulted from
+    /// the inviter's profile timezone when the invite is accepted; falls back to UTC.
+    /// </summary>
+    public string Timezone { get; set; } = "Etc/UTC";
+
     public User UserA { get; set; } = null!;
     public User? UserB { get; set; }
 

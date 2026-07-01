@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Pulse.Api.ApiService.Data;
@@ -11,9 +12,11 @@ using Pulse.Api.ApiService.Data;
 namespace Pulse.Api.ApiService.Data.Migrations
 {
     [DbContext(typeof(PulseDbContext))]
-    partial class PulseDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260630130340_MomentChoiceAndVoice")]
+    partial class MomentChoiceAndVoice
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -836,11 +839,6 @@ namespace Pulse.Api.ApiService.Data.Migrations
                     b.Property<bool>("IsFavorite")
                         .HasColumnType("boolean")
                         .HasColumnName("is_favorite");
-
-                    b.Property<string>("Note")
-                        .HasMaxLength(80)
-                        .HasColumnType("character varying(80)")
-                        .HasColumnName("note");
 
                     b.Property<string>("Reaction")
                         .HasMaxLength(16)

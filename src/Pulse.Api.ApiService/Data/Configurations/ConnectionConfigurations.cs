@@ -11,6 +11,7 @@ public class ConnectionConfiguration : IEntityTypeConfiguration<Connection>
         builder.HasKey(c => c.Id);
         builder.Property(c => c.Status).HasConversion<string>().HasMaxLength(16);
         builder.Property(c => c.InviteCode).HasMaxLength(16);
+        builder.Property(c => c.Timezone).HasMaxLength(64);
 
         // An invite code is only meaningful while an invite is outstanding, so the unique index is
         // filtered: many connections can have a null code (already accepted or cancelled), but a live
