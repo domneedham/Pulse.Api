@@ -278,8 +278,8 @@ public class PulseService(PulseDbContext db) : IPulseService
         pulse.Id,
         pulse.Type,
         // Touch has no phrase (it's a drawing); show a label so it reads in the timeline. The drawing
-        // itself is fetched separately by the (future) viewer.
-        Text: pulse.Type == PulseType.Touch ? "PulseTouch" : pulse.Phrase?.Text ?? string.Empty,
+        // itself is fetched separately by the viewer.
+        Text: pulse.Type == PulseType.Touch ? "A doodle" : pulse.Phrase?.Text ?? string.Empty,
         Emoji: pulse.Phrase?.Emoji ?? FavoriteCatalog.DefaultEmoji(pulse.Type),
         SentByMe: pulse.SenderId == userId,
         pulse.CreatedAt,

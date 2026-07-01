@@ -43,6 +43,11 @@ public class PulsesController(
     public async Task<ActionResult<PulseDto>> GetById(Guid id, CancellationToken ct) =>
         Ok(await pulseService.GetByIdAsync(currentUser.Id, id, ct));
 
+    /// <summary>The vector stroke JSON for a PulseTouch, fetched by the doodle viewer on open.</summary>
+    [HttpGet("{id:guid}/touch")]
+    public async Task<ActionResult<PulseTouchDto>> GetTouch(Guid id, CancellationToken ct) =>
+        Ok(await pulseService.GetTouchAsync(currentUser.Id, id, ct));
+
     [HttpPost("mood")]
     public async Task<ActionResult<PulseDto>> SendMood(SendMoodRequest request, CancellationToken ct) =>
         Ok(await pulseService.SendMoodAsync(currentUser.Id, request.Text, request.Emoji, request.Note, ct));
