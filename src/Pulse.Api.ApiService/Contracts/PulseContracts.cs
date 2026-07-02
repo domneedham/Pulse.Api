@@ -40,4 +40,5 @@ public record PulseDto(
     DateTimeOffset CreatedAt,
     bool IsFavorite = false,
     string? Reaction = null,
-    string? Note = null);
+    string? Note = null,
+    string? StrokeData = null);

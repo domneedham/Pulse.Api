@@ -256,7 +256,7 @@ public class PulseService(PulseDbContext db) : IPulseService
     }
 
     private static IQueryable<PulseEntity> WithDetails(IQueryable<PulseEntity> query) =>
-        query.Include(p => p.Mood).Include(p => p.Need).Include(p => p.Thought);
+        query.Include(p => p.Mood).Include(p => p.Need).Include(p => p.Thought).Include(p => p.Touch);
 
     private async Task<PulseEntity> LoadPulseAsync(Guid connectionId, Guid pulseId, CancellationToken ct) =>
         await WithDetails(db.Pulses.Where(p => p.Id == pulseId && p.ConnectionId == connectionId))
@@ -285,5 +285,6 @@ public class PulseService(PulseDbContext db) : IPulseService
         pulse.CreatedAt,
         IsFavorite: pulse.IsFavorite,
         Reaction: pulse.Reaction,
-        Note: pulse.Note);
+        Note: pulse.Note,
+        StrokeData: pulse.Touch?.StrokeData);
 }
